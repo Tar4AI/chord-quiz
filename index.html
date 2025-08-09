@@ -166,7 +166,7 @@
       const newKey = prompt("เปลี่ยนคีย์เป็นอะไรดี? (เช่น C, F#, A#)", NOTES[keyIndex]);
       if(!newKey) return;
       const idx = NOTES.indexOf(newKey);
-      if(idx === -1){ alert("ขออภัย ยังรับเฉพาะโน้ตที่มี # เช่น C C# D D# E F F# G G# A A# B"); return; }
+      if(idx === -1){ alert("ขออภัย โปรดใส่ทั้ง # และ b เช่น D# (Eb)"); return; }
       const d = Number(prompt("ดีกรีที่เท่าไหร่ (1–7)?", String(degree)));
       if(!Number.isInteger(d) || d<1 || d>7){ alert("กรุณาใส่เลข 1–7 ค่ะ"); return; }
       keyIndex = idx; degree = d; setQA();
