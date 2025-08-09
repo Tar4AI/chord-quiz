@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>เกมทายคอร์ดดีกรี</title>
+  <style>
+    :root{
+      --bg1:#0b1220;
+      --bg2:#0a1120;
+      --card:#111827;
+      --card2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#34d399;
+      --accent2:#6366f1;
+      --btn:#10b981;
+      --btn2:#374151;
+      --ring:rgba(52,211,153,.6);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, #0e1a34 0%, transparent 60%), linear-gradient(180deg,var(--bg1),var(--bg2));
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    }
+    .shell{max-width:1100px; margin:0 auto; padding:32px 20px}
+    h1{margin:0; font-weight:900; letter-spacing:-.02em; font-size:34px}
+    .sub{margin-top:6px; color:var(--muted)}
+    .grid{display:grid; gap:16px; margin-top:20px}
+    @media (min-width: 900px){ .grid{grid-template-columns:1fr 1fr} }
+    .card{background:rgba(17,24,39,.7); border-radius:20px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .label{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8}
+    .key{font-size:44px; font-weight:900; margin-top:6px}
+    .muted{color:#94a3b8; font-size:12px; margin-top:8px}
+    .q{font-size:22px; font-weight:800; margin-top:6px}
+    .row{display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px}
+    @media (min-width: 900px){ .row{grid-template-columns:1fr 1fr} }
+    select{
+      width:100%; background:var(--card2); color:var(--text);
+      border:1px solid #334155; border-radius:14px; padding:10px 12px; outline:none;
+    }
+    select:focus{border-color:var(--accent)}
+    .btns{display:flex; gap:12px; margin-top:16px; flex-wrap:wrap}
+    .btn{padding:10px 16px; border-radius:14px; font-weight:800; cursor:pointer; border:none}
+    .btn.primary{background:var(--btn); color:#0b1220}
+    .btn.secondary{background:var(--btn2); color:#e5e7eb}
+    .result{margin-top:10px; font-size:14px}
+    .reveal {margin-top:8px; font-size:14px}
+    .footer{margin-top:22px}
+    .bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+    .pill{background:rgba(99,102,241,.15); color:#e0e7ff; padding:8px 14px; border-radius:14px; font-weight:700; border:none; cursor:pointer}
+    .note{margin-top:10px; font-size:12px; color:#94a3b8}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>เกมทายคอร์ดดีกรี</h1>
+    <div class="sub">โหมด: คีย์เมเจอร์ • ถามดีกรี 1–7 (ไม่โชว์สเกล ให้คิดเอง)</div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="label">คีย์</div>
+        <div id="keyName" class="key">C</div>
+        <div class="muted">ซ่อนสเกลไว้เพื่อฝึกคิดเอง</div>
+      </div>
+
+      <div class="card">
+        <div class="label">คำถาม</div>
+        <div id="question" class="q">ดีกรีที่ 1 ในคีย์ C คือคอร์ดอะไร?</div>
+
+        <div class="row">
+          <div>
+            <div class="label" style="text-transform:none; letter-spacing:0;">รูทคอร์ด</div>
+            <select id="rootSelect">
+              <option value="">— เลือก —</option>
+            </select>
+          </div>
+          <div>
+            <div class="label" style="text-transform:none; letter-spacing:0;">คุณภาพคอร์ด</div>
+            <select id="qualitySelect">
+              <option value="">— เลือก —</option>
+              <option value="Major">Major</option>
+              <option value="minor">minor</option>
+              <option value="dim">dim</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="checkBtn" class="btn primary">ตรวจคำตอบ</button>
+          <button id="nextBtn" class="btn secondary">ข้อต่อไป</button>
+        </div>
+
+        <div id="result" class="result"></div>
+        <div id="reveal" class="reveal"></div>
+      </div>
+    </div>
+
+    <div class="card footer">
+      <div class="bar">
+        <div class="muted">สถิติ: ถูก <span id="ok">0</span> / ทั้งหมด <span id="total">0</span></div>
+        <button id="reviewBtn" class="pill">โหมดทบทวน (ตั้งคีย์/ดีกรีเอง)</button>
+      </div>
+      <div class="note">หมายเหตุ: ใช้การตั้งชื่อโน้ตแบบชาร์ปทั้งหมด (C, C#, …, A#, B) และรองรับ Major / minor / dim ครบ 1–7 (vii° = dim)</div>
+    </div>
+  </div>
+
+  <script>
+    const NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    const QUALITIES = ["Major","minor","dim"];
+    const MAJOR_SCALE_OFFSETS = [0,2,4,5,7,9,11];
+    const DEGREE_QUALITIES = ["Major","minor","minor","Major","Major","minor","dim"];
+
+    function majorScaleFrom(rootIndex){ return MAJOR_SCALE_OFFSETS.map(off => NOTES[(rootIndex + off) % 12]); }
+    function rint(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+    const rootSel = document.getElementById('rootSelect');
+    NOTES.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; rootSel.appendChild(o);} );
+
+    const qualSel = document.getElementById('qualitySelect');
+    const keyEl = document.getElementById('keyName');
+    const qEl   = document.getElementById('question');
+    const resEl = document.getElementById('result');
+    const revEl = document.getElementById('reveal');
+    const okEl  = document.getElementById('ok');
+    const totalEl = document.getElementById('total');
+
+    let keyIndex = rint(0,11);
+    let degree = rint(1,7);
+    let score = { ok:0, total:0 };
+
+    function setQA(){
+      const keyName = NOTES[keyIndex];
+      keyEl.textContent = keyName;
+      qEl.textContent = `ดีกรีที่ ${degree} ในคีย์ ${keyName} คือคอร์ดอะไร?`;
+      rootSel.value = ""; qualSel.value = "";
+      resEl.textContent = ""; revEl.textContent = "";
+    }
+
+    function correctAnswer(){
+      const scale = majorScaleFrom(keyIndex);
+      return { root: scale[degree-1], quality: DEGREE_QUALITIES[degree-1] };
+    }
+
+    function check(){
+      if(!rootSel.value || !qualSel.value){
+        resEl.textContent = "กรุณาเลือกชื่อคอร์ดให้ครบก่อนค่ะ";
+        return;
+      }
+      const c = correctAnswer();
+      const ok = (rootSel.value === c.root) && (qualSel.value === c.quality);
+      score.total += 1; if(ok) score.ok += 1;
+      okEl.textContent = score.ok; totalEl.textContent = score.total;
+      resEl.textContent = ok ? "ถูกต้อง เยี่ยมมาก!" : "ยังไม่ถูก ลองดูเฉลยได้เลย";
+      revEl.textContent = ok ? "" : `เฉลย: ${c.root} ${c.quality}`;
+    }
+
+    function next(){
+      keyIndex = rint(0,11);
+      degree = rint(1,7);
+      setQA();
+    }
+
+    function review(){
+      const newKey = prompt("เปลี่ยนคีย์เป็นอะไรดี? (เช่น C, F#, A#)", NOTES[keyIndex]);
+      if(!newKey) return;
+      const idx = NOTES.indexOf(newKey);
+      if(idx === -1){ alert("ขออภัย ยังรับเฉพาะโน้ตที่มี # เช่น C C# D D# E F F# G G# A A# B"); return; }
+      const d = Number(prompt("ดีกรีที่เท่าไหร่ (1–7)?", String(degree)));
+      if(!Number.isInteger(d) || d<1 || d>7){ alert("กรุณาใส่เลข 1–7 ค่ะ"); return; }
+      keyIndex = idx; degree = d; setQA();
+    }
+
+    document.getElementById('checkBtn').addEventListener('click', check);
+    document.getElementById('nextBtn').addEventListener('click', next);
+    document.getElementById('reviewBtn').addEventListener('click', review);
+
+    setQA();
+  </script>
+</body>
+</html>
